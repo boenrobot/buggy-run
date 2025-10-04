@@ -1,0 +1,18 @@
+{
+  "name": "buggy-run",
+  "description": "See README.md",
+  "private": true,
+  "main": "index.html",
+  "scripts": {
+    "minify": "html-minifier-terser -c ./html-minifier-terser.json --output ./index.html ./src/index.html",
+    "prepare": "husky"
+  },
+  "keywords": [],
+  "author": "Vasil Rangelov",
+  "license": "GPL-3.0-only",
+  "devDependencies": {
+    "html-minifier-terser": "^7.2.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.6.2"
+  }
+}

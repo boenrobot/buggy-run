@@ -1,0 +1,1811 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="author" content="Vasil Rangelov (boenrobot)" />
+    <title>Buggy run</title>
+    <style type="text/css">
+      body {
+        touch-action: none;
+        margin: 0;
+        background:
+          repeating-linear-gradient(
+            0deg,
+            #5a7a8a 0px,
+            #5a7a8a 2px,
+            transparent 2px,
+            transparent 60px,
+            #5a7a8a 60px,
+            #5a7a8a 62px
+          ),
+          repeating-linear-gradient(
+            90deg,
+            #5a7a8a 0px,
+            #5a7a8a 2px,
+            transparent 2px,
+            transparent 60px,
+            #5a7a8a 60px,
+            #5a7a8a 62px
+          ),
+          repeating-linear-gradient(
+            0deg,
+            rgba(255, 255, 255, 0.1) 0px,
+            rgba(255, 255, 255, 0.05) 30px,
+            transparent 30px,
+            transparent 32px,
+            rgba(0, 0, 0, 0.05) 32px,
+            rgba(0, 0, 0, 0.1) 58px,
+            transparent 58px,
+            transparent 60px
+          ),
+          repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.1) 0px,
+            rgba(255, 255, 255, 0.05) 30px,
+            transparent 30px,
+            transparent 32px,
+            rgba(0, 0, 0, 0.05) 32px,
+            rgba(0, 0, 0, 0.1) 58px,
+            transparent 58px,
+            transparent 60px
+          ),
+          linear-gradient(45deg, #7a9eb0 0%, #8aa4b5 25%, #7a9eb0 50%, #8aa4b5 75%, #7a9eb0 100%);
+        background-size:
+          60px 60px,
+          60px 60px,
+          60px 60px,
+          60px 60px,
+          120px 120px;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      #game-area {
+        background:
+          repeating-linear-gradient(
+            90deg,
+            rgba(139, 90, 43, 0.1) 0px,
+            rgba(139, 90, 43, 0.15) 1px,
+            rgba(160, 113, 70, 0.1) 2px,
+            rgba(139, 90, 43, 0.05) 4px,
+            transparent 6px,
+            transparent 12px
+          ),
+          repeating-linear-gradient(
+            0deg,
+            rgba(101, 67, 33, 0.08) 0px,
+            rgba(139, 90, 43, 0.12) 0.5px,
+            rgba(101, 67, 33, 0.06) 1px,
+            transparent 2px,
+            transparent 8px
+          ),
+          radial-gradient(ellipse at center, #d2b48c 0%, #cd853f 30%, #a0522d 70%, #8b4513 100%);
+        aspect-ratio: 1 / 1;
+        width: min(100vw, 100vh);
+        height: min(100vw, 100vh);
+        overflow: hidden;
+        outline: 1px solid black;
+        container-type: size;
+        position: relative;
+        box-shadow:
+          inset 0 0 20px rgba(139, 69, 19, 0.3),
+          inset 0 0 40px rgba(101, 67, 33, 0.2),
+          0 8px 16px rgba(0, 0, 0, 0.3),
+          0 2px 4px rgba(0, 0, 0, 0.2);
+        border: 3px solid #654321;
+        border-radius: 8px;
+      }
+      #scoreboard {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        font-size: 5vw;
+        color: white;
+        opacity: 40%;
+        z-index: 100;
+      }
+      .scoreboard-beetle {
+        display: inline;
+        position: absolute;
+        left: 0;
+      }
+      .scoreboard-lady-beetle {
+        display: inline;
+        position: absolute;
+        min-width: 3em;
+        overflow: visible;
+      }
+
+      .achievements {
+        font-size: 10vw;
+        position: absolute;
+        z-index: 500;
+        pointer-events: none;
+        opacity: 20%;
+      }
+
+      .achievement-bar {
+        position: fixed;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5em;
+        font-size: 3vw;
+        z-index: 200;
+        padding: 0.5em;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        max-width: 5.25em;
+      }
+
+      .achievement-bar-beetle {
+        bottom: 1em;
+        left: 1em;
+      }
+
+      .achievement-bar-lady-beetle {
+        bottom: 1em;
+        right: 1em;
+      }
+
+      .achievement-bar > span {
+        display: inline-block;
+        opacity: 0;
+        animation: fadeIn 0.5s ease-in forwards;
+      }
+
+      @keyframes fadeIn {
+        to {
+          opacity: 1;
+        }
+      }
+
+      .joystick {
+        position: fixed;
+        width: 128px;
+        height: 128px;
+        z-index: 1000;
+        opacity: 50%;
+      }
+
+      .joystick-container {
+        width: 128px;
+        height: 128px;
+        position: relative;
+      }
+
+      .joystick-base {
+        width: 100%;
+        height: 100%;
+      }
+
+      .joystick-stick-container {
+        position: absolute;
+        left: 32px;
+        top: 32px;
+        width: 64px;
+        height: 64px;
+      }
+
+      .joystick-left {
+        left: max(5vw, 5vh);
+      }
+
+      .joystick-right {
+        right: max(5vw, 5vh);
+      }
+
+      /* landscape positioning */
+      @media (orientation: landscape) and (min-aspect-ratio: 1/1) and (not (aspect-ratio: 1/1)) and (min-width: 40em) {
+        .joystick-left {
+          top: 50%;
+          transform: translate3d(0, -50%, 0);
+        }
+        .joystick-right {
+          top: 50%;
+          transform: translate3d(0, -50%, 0);
+        }
+        .scoreboard-lady-beetle {
+          right: 0;
+          max-width: calc(50vw - min(50vw, 50vh));
+        }
+      }
+
+      /* portrait positioning */
+      @media (max-aspect-ratio: 1/1), (aspect-ratio: 1/1), not (min-width: 40em) {
+        .joystick-left {
+          top: max(5vw, 5vh);
+          left: 50%;
+          transform: translate3d(-50%, 0, 0);
+        }
+        .joystick-right {
+          bottom: max(5vw, 5vh);
+          right: 50%;
+          transform: translate3d(50%, 0, 0);
+        }
+        .scoreboard-lady-beetle {
+          left: 0;
+          right: 0;
+          top: calc(100vh - max(15vw, 15vh));
+        }
+
+        .achievement-bar {
+          max-width: 12.75em;
+        }
+
+        .achievement-bar-beetle {
+          top: 1em;
+          right: 1em;
+          bottom: auto;
+          left: auto;
+        }
+        .achievement-bar-lady-beetle {
+          bottom: 1em;
+          right: 1em;
+          top: auto;
+          left: auto;
+        }
+      }
+
+      .outside {
+        position: absolute;
+        left: -9999px;
+        pointer-events: none;
+      }
+
+      .beetle {
+        font-size: 10cqh;
+      }
+      .android .beetle > span:first-child,
+      .android .roach > span:first-child,
+      .android .scoreboard-beetle > span:first-child {
+        display: inline-block;
+        transform: rotate3d(0, 0, 1, 45deg);
+      }
+      .lady-beetle {
+        font-size: 10cqh;
+      }
+      .herb {
+        font-size: 5cqh;
+      }
+      .roach,
+      .roach-death {
+        font-size: 8cqh;
+      }
+      .raindrop {
+        font-size: 5cqh;
+      }
+      .spider {
+        font-size: 10cqh;
+      }
+      .web {
+        font-size: 20cqh;
+      }
+      .fly {
+        font-size: 6cqh;
+      }
+      .android .fly > span:first-child {
+        display: inline-block;
+        transform: rotate3d(0, 0, 1, 120deg);
+      }
+      .entity {
+        position: absolute;
+        padding: 0;
+        margin: 0;
+        will-change: transform;
+        transform: translate3d(0, 0, 0);
+        backface-visibility: hidden;
+      }
+
+      text,
+      #scoreboard,
+      .achievement-bar {
+        -webkit-user-select: none;
+        user-select: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scoreboard">
+      <p class="scoreboard-beetle">
+        <span>🪲</span>
+        :
+        <span class="score">0</span>
+      </p>
+      <p class="scoreboard-lady-beetle">
+        <span>🐞</span>
+        :
+        <span class="score">0</span>
+      </p>
+    </div>
+    <div id="game-area"></div>
+
+    <!-- Achievement bars -->
+    <div class="achievement-bar achievement-bar-beetle"></div>
+    <div class="achievement-bar achievement-bar-lady-beetle"></div>
+
+    <!-- Shared defs for joystick sticks -->
+    <svg width="0" height="0" class="outside" aria-hidden="true">
+      <defs>
+        <!-- Stick shared resources -->
+        <radialGradient id="joystickStickHighlight" cx="35%" cy="30%" r="65%">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.75" />
+          <stop offset="40%" stop-color="#ffffff" stop-opacity="0.15" />
+          <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+        </radialGradient>
+        <filter id="joystickStickShadow" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.4" />
+        </filter>
+
+        <!-- Joystick base shared resources -->
+        <radialGradient id="joystickBaseGrad" cx="50%" cy="45%" r="55%">
+          <stop offset="0%" stop-color="#fafafa" />
+          <stop offset="45%" stop-color="#c9c9c9" />
+          <stop offset="100%" stop-color="#7d7d7d" />
+        </radialGradient>
+        <radialGradient id="joystickBaseInner" cx="50%" cy="55%" r="50%">
+          <stop offset="0%" stop-color="#595959" />
+          <stop offset="70%" stop-color="#2e2e2e" />
+          <stop offset="100%" stop-color="#111" />
+        </radialGradient>
+        <filter id="joystickBaseShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.35" />
+        </filter>
+
+        <!-- Base symbol -->
+        <symbol id="joystick-base-symbol" viewBox="0 0 128 128">
+          <circle cx="64" cy="64" r="60" fill="url(#joystickBaseGrad)" filter="url(#joystickBaseShadow)" />
+          <circle cx="64" cy="64" r="44" fill="none" stroke="#000" stroke-opacity="0.35" stroke-width="2" />
+          <circle cx="64" cy="64" r="42" fill="#1c1c1c" />
+          <circle cx="64" cy="64" r="34" fill="url(#joystickBaseInner)" />
+          <g stroke="#fff" stroke-opacity=".12" stroke-width="2">
+            <line x1="64" y1="40" x2="64" y2="88" />
+            <line x1="40" y1="64" x2="88" y2="64" />
+          </g>
+          <path
+            d="M20 64a44 44 0 0 1 72.5-33"
+            fill="none"
+            stroke="#fff"
+            stroke-width="5"
+            stroke-linecap="round"
+            stroke-opacity=".25"
+          />
+          <g id="arrows" fill="#1c1c1c" stroke="#000" stroke-opacity=".55" stroke-width="1.3" stroke-linejoin="round">
+            <polygon points="64,8 56,20 72,20" />
+            <polygon points="120,64 108,56 108,72" />
+            <polygon points="64,120 56,108 72,108" />
+            <polygon points="8,64 20,56 20,72" />
+          </g>
+        </symbol>
+
+        <!-- Left joystick with WASD labels -->
+        <symbol id="joystick-base-left" viewBox="0 0 128 128">
+          <use href="#joystick-base-symbol" />
+          <text x="64" y="10" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold" font-family="Arial">
+            W
+          </text>
+          <text x="118" y="68" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold" font-family="Arial">
+            D
+          </text>
+          <text x="64" y="123" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold" font-family="Arial">
+            S
+          </text>
+          <text x="10" y="68" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold" font-family="Arial">
+            A
+          </text>
+        </symbol>
+
+        <!-- Right joystick with IJKL labels -->
+        <symbol id="joystick-base-right" viewBox="0 0 128 128">
+          <use href="#joystick-base-symbol" />
+          <text x="64" y="10" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold" font-family="Arial">
+            I
+          </text>
+          <text x="118" y="68" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold" font-family="Arial">
+            L
+          </text>
+          <text x="64" y="123" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold" font-family="Arial">
+            K
+          </text>
+          <text x="10" y="68" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold" font-family="Arial">
+            J
+          </text>
+        </symbol>
+      </defs>
+    </svg>
+
+    <template id="player1-template">
+      <div id="beetle" class="entity beetle"><span>🪲</span></div>
+    </template>
+    <template id="player2-template">
+      <div id="lady-beetle" class="entity lady-beetle">🐞</div>
+    </template>
+    <template id="collectible-template">
+      <div class="entity herb">🌿</div>
+    </template>
+    <template id="swiper-template">
+      <div class="entity roach"><span>🪳</span></div>
+    </template>
+    <template id="boon-template">
+      <div class="entity raindrop">💧</div>
+    </template>
+    <template id="waker-template">
+      <div class="entity spider">🕷️</div>
+    </template>
+    <template id="trace-template">
+      <div class="entity web">🕸️</div>
+    </template>
+    <template id="swiper-death-template">
+      <div class="entity roach-death">💥</div>
+    </template>
+    <template id="chaos-template">
+      <div class="entity fly"><span>🪰</span></div>
+    </template>
+
+    <template id="joystick-template">
+      <div class="joystick-container">
+        <svg class="joystick-base" viewBox="0 0 128 128">
+          <use href="#joystick-base-symbol" />
+        </svg>
+        <div class="joystick-stick-container">
+          <svg
+            class="joystick-stick"
+            width="64"
+            height="64"
+            viewBox="0 0 64 64"
+            color="#000000"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle cx="32" cy="32" r="28" fill="currentColor" filter="url(#joystickStickShadow)" />
+            <circle cx="32" cy="32" r="28" fill="url(#joystickStickHighlight)" />
+            <circle cx="32" cy="32" r="28" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="2" />
+          </svg>
+        </div>
+      </div>
+    </template>
+
+    <script type="text/javascript">
+      class JoystickController {
+        #keyboardEventKeysMap = {};
+        constructor(stick, maxDistance, deadzone, keyboardEventKeysMap, container) {
+          this.stick = stick;
+          this.container = container; // Store reference to container element
+          for (const [key, value] of Object.entries(keyboardEventKeysMap)) {
+            if (["up", "down", "left", "right"].includes(key)) {
+              this.#keyboardEventKeysMap[key] = {
+                pressed: new KeyboardEvent("keydown", { key: value }),
+                released: new KeyboardEvent("keyup", { key: value }),
+              };
+            }
+          }
+
+          // location from which drag begins, used to calculate offsets
+          this.dragStart = null;
+
+          // track touch identifier in case multiple joysticks present
+          this.touchId = null;
+
+          this.active = false;
+          this.value = { x: 0, y: 0 };
+
+          let self = this;
+
+          function handleKeyboardEvents() {
+            if (self.#keyboardEventKeysMap?.right) {
+              if (self.value.x > 0.15) {
+                document.dispatchEvent(self.#keyboardEventKeysMap.right.pressed);
+              } else {
+                document.dispatchEvent(self.#keyboardEventKeysMap.right.released);
+              }
+            }
+            if (self.#keyboardEventKeysMap?.left) {
+              if (self.value.x < -0.15) {
+                document.dispatchEvent(self.#keyboardEventKeysMap.left.pressed);
+              } else {
+                document.dispatchEvent(self.#keyboardEventKeysMap.left.released);
+              }
+            }
+            if (self.#keyboardEventKeysMap?.down) {
+              if (self.value.y > 0.15) {
+                document.dispatchEvent(self.#keyboardEventKeysMap.down.pressed);
+              } else {
+                document.dispatchEvent(self.#keyboardEventKeysMap.down.released);
+              }
+            }
+            if (self.#keyboardEventKeysMap?.up) {
+              if (self.value.y < -0.15) {
+                document.dispatchEvent(self.#keyboardEventKeysMap.up.pressed);
+              } else {
+                document.dispatchEvent(self.#keyboardEventKeysMap.up.released);
+              }
+            }
+          }
+
+          function handleDown(event) {
+            self.active = true;
+
+            // all drag movements are instantaneous
+            stick.style.transition = "0s";
+
+            // touch event fired before mouse event; prevent redundant mouse event from firing
+            event.preventDefault();
+
+            if (event.changedTouches)
+              self.dragStart = {
+                x: event.changedTouches[0].clientX,
+                y: event.changedTouches[0].clientY,
+              };
+            else self.dragStart = { x: event.clientX, y: event.clientY };
+
+            // if this is a touch event, keep track of which one
+            if (event.changedTouches) self.touchId = event.changedTouches[0].identifier;
+          }
+
+          function handleMove(event) {
+            if (!self.active) return;
+
+            // if this is a touch event, make sure it is the right one
+            // also handle multiple simultaneous touchmove events
+            let touchmoveId = null;
+            if (event.changedTouches) {
+              for (let i = 0; i < event.changedTouches.length; i++) {
+                if (self.touchId == event.changedTouches[i].identifier) {
+                  touchmoveId = i;
+                  event.clientX = event.changedTouches[i].clientX;
+                  event.clientY = event.changedTouches[i].clientY;
+                }
+              }
+
+              if (touchmoveId == null) return;
+            }
+
+            const xDiff = event.clientX - self.dragStart.x;
+            const yDiff = event.clientY - self.dragStart.y;
+            const angle = Math.atan2(yDiff, xDiff);
+            const distance = Math.min(maxDistance, Math.hypot(xDiff, yDiff));
+            const xPosition = distance * Math.cos(angle);
+            const yPosition = distance * Math.sin(angle);
+
+            // move stick image to new position
+            stick.style.transform = `translate3d(${xPosition}px, ${yPosition}px, 0px)`;
+
+            // deadzone adjustment
+            const distance2 =
+              distance < deadzone ? 0 : (maxDistance / (maxDistance - deadzone)) * (distance - deadzone);
+            const xPosition2 = distance2 * Math.cos(angle);
+            const yPosition2 = distance2 * Math.sin(angle);
+            const xPercent = parseFloat((xPosition2 / maxDistance).toFixed(4));
+            const yPercent = parseFloat((yPosition2 / maxDistance).toFixed(4));
+
+            self.value = { x: xPercent, y: yPercent };
+            handleKeyboardEvents();
+          }
+
+          function handleUp(event) {
+            if (!self.active) return;
+
+            // if this is a touch event, make sure it is the right one
+            if (event.changedTouches && self.touchId != event.changedTouches[0].identifier) return;
+
+            // transition the joystick position back to center
+            stick.style.transition = ".2s";
+            stick.style.transform = `translate3d(0px, 0px, 0px)`;
+
+            // reset everything
+            self.value = { x: 0, y: 0 };
+            self.touchId = null;
+            self.active = false;
+            handleKeyboardEvents();
+          }
+
+          stick.addEventListener("mousedown", handleDown);
+          stick.addEventListener("touchstart", handleDown);
+          document.addEventListener("mousemove", handleMove, {
+            passive: false,
+          });
+          document.addEventListener("touchmove", handleMove, {
+            passive: false,
+          });
+          document.addEventListener("mouseup", handleUp);
+          document.addEventListener("touchend", handleUp);
+        }
+
+        // Method to reposition the joystick container
+        moveToPosition(x, y) {
+          const containerRect = this.container.getBoundingClientRect();
+          const halfWidth = containerRect.width / 2;
+          const halfHeight = containerRect.height / 2;
+
+          // Position the container so its center is at (x, y)
+          this.container.style.left = x - halfWidth + "px";
+          this.container.style.top = y - halfHeight + "px";
+          this.container.style.right = "auto";
+          this.container.style.bottom = "auto";
+          this.container.style.transform = "none";
+        }
+
+        // Method to get the center position of the joystick
+        getCenterPosition() {
+          const rect = this.container.getBoundingClientRect();
+          return {
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2,
+          };
+        }
+
+        // Method to start drag from external position
+        startDragFromPosition(x, y, touchId = null) {
+          this.active = true;
+          this.stick.style.transition = "0s";
+          this.dragStart = { x, y };
+          this.touchId = touchId;
+        }
+
+        // Method to reset joystick to initial CSS position
+        resetPosition() {
+          this.container.style.left = "";
+          this.container.style.top = "";
+          this.container.style.right = "";
+          this.container.style.bottom = "";
+          this.container.style.transform = "";
+        }
+      }
+
+      const gameArea = document.getElementById("game-area");
+      const player1template = document.getElementById("player1-template").content;
+      const player2template = document.getElementById("player2-template").content;
+      const collectibletemplate = document.getElementById("collectible-template").content;
+      const swipertemplate = document.getElementById("swiper-template").content;
+      const swiperDeathTemplate = document.getElementById("swiper-death-template").content;
+      const wakerTemplate = document.getElementById("waker-template").content;
+      const traceTemplate = document.getElementById("trace-template").content;
+      const boontemplate = document.getElementById("boon-template").content;
+      const joysticktemplate = document.getElementById("joystick-template").content;
+      const chaosTemplate = document.getElementById("chaos-template").content;
+      const player1ScoreElement = document.querySelector(".scoreboard-beetle .score");
+      const player2ScoreElement = document.querySelector(".scoreboard-lady-beetle .score");
+      const player1AchievementBar = document.querySelector(".achievement-bar-beetle");
+      const player2AchievementBar = document.querySelector(".achievement-bar-lady-beetle");
+
+      // Track achievements earned by each player
+      const player1Achievements = new Set();
+      const player2Achievements = new Set();
+
+      // Achievement definitions
+      const achievementMilestones = {
+        10: "🏁",
+        16: "💀",
+        21: "🃏",
+        25: "🎄",
+        31: "🎃",
+        42: "🛸",
+        51: "👽",
+        64: "🍄",
+        69: "☯️",
+        88: "🎹",
+        100: "💯",
+        360: "🎮",
+        420: "🚬",
+        777: "🎰",
+        888: "🧧",
+        1000: "🎆",
+        1337: "🖥️",
+        1776: "🗽",
+        3000: "❤️",
+        4321: "🔢",
+        9000: "🐉",
+      };
+
+      if (navigator.userAgent.includes("; Android ")) {
+        document.body.classList.add("android");
+      }
+
+      // Track which keys are currently pressed
+      const keysPressed = new Set();
+      const collectibles = [];
+      const swipers = [];
+      const boons = [];
+      const spiders = [];
+      const webs = [];
+      const chaosEntities = [];
+
+      // Track last herb collection time
+      let lastHerbCollectionTime = Date.now();
+      let lastPlayerMovementTime = Date.now();
+
+      // Reused pieces
+      const edges = ["top", "right", "bottom", "left"];
+
+      // Function to position a player
+      function placeGameEntity(entity, bottom, left) {
+        entity.style.bottom = bottom;
+        entity.style.left = left;
+      }
+
+      // Function to generate random position for collectibles
+      function getRandomPosition() {
+        return {
+          bottom: Math.random() * 80 + 10 + "%", // 10-90%
+          left: Math.random() * 80 + 10 + "%", // 10-90%
+        };
+      }
+
+      // Function to spawn a collectible at random position
+      function spawnCollectible() {
+        const collectible = collectibletemplate.cloneNode(true).children[0];
+        const position = getRandomPosition();
+        placeGameEntity(collectible, position.bottom, position.left);
+        gameArea.appendChild(collectible);
+        collectibles.push(collectible);
+        return collectible;
+      }
+
+      // Spawn a raindrop at random position
+      function spawnBoon() {
+        const raindrop = boontemplate.cloneNode(true).children[0];
+        const position = getRandomPosition();
+        placeGameEntity(raindrop, position.bottom, position.left);
+        gameArea.appendChild(raindrop);
+        boons.push(raindrop);
+        return raindrop;
+      }
+
+      // Function to spawn a swiper from a random edge
+      function spawnSwiper() {
+        const entity = swipertemplate.cloneNode(true).children[0];
+        const edge = edges[Math.floor(Math.random() * edges.length)];
+
+        let startX, startY, targetX, targetY;
+
+        switch (edge) {
+          case "top":
+            entity.style.transform = "rotate3d(0, 0, 1, 180deg)"; // Face downwards
+            startX = Math.random() * 92 + 4; // Clamped between 4% and 96%
+            startY = 110; // Start above screen
+            targetX = startX;
+            targetY = -20; // End below screen
+            break;
+          case "bottom":
+            entity.style.transform = "rotate3d(0, 0, 1, 0deg)"; // Face upwards
+            startX = Math.random() * 92 + 4; // Clamped between 4% and 96%
+            startY = -20; // Start below screen
+            targetX = startX;
+            targetY = 110; // End above screen
+            break;
+          case "left":
+            entity.style.transform = "rotate3d(0, 0, 1, 90deg)"; // Face right
+            startX = -20; // Start left of screen
+            startY = Math.random() * 92 + 4; // Clamped between 4% and 96%
+            targetX = 120; // End right of screen
+            targetY = startY;
+            break;
+          case "right":
+            entity.style.transform = "rotate3d(0, 0, 1, -90deg)"; // Face left
+            startX = 120; // Start right of screen
+            startY = Math.random() * 92 + 4; // Clamped between 4% and 96%
+            targetX = -20; // End left of screen
+            targetY = startY;
+            break;
+        }
+
+        entity.style.left = startX + "%";
+        entity.style.bottom = startY + "%";
+        gameArea.appendChild(entity);
+        swipers.push(entity);
+
+        // Animate swiper movement
+        moveSwiper(entity, startX, startY, targetX, targetY);
+
+        // Check if we should spawn chaos entity
+        if (swipers.length % 10 === 0 && swipers.length > 0) {
+          spawnChaos();
+        }
+
+        return entity;
+      }
+
+      // Function to move swiper across screen
+      function moveSwiper(swiper, startX, startY, targetX, targetY) {
+        const duration = 3000; // 3 seconds to cross screen
+        const startTime = Date.now();
+
+        const animate = () => {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+
+          const currentX = startX + (targetX - startX) * progress;
+          const currentY = startY + (targetY - startY) * progress;
+
+          swiper.style.left = currentX + "%";
+          swiper.style.bottom = currentY + "%";
+
+          // Check for player collisions
+          handleSwiperCollision(swiper);
+
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+          } else {
+            // remove swiper when it exits screen
+            const index = swipers.indexOf(swiper);
+            if (index > -1) {
+              swipers.splice(index, 1);
+              swiper.remove();
+            }
+          }
+        };
+
+        requestAnimationFrame(animate);
+      }
+
+      // Function to handle swiper collision with players
+      function handleSwiperCollision(swiper) {
+        if (areEntitiesColliding(swiper, player1)) {
+          const currentScore = parseInt(player1ScoreElement.textContent);
+          player1ScoreElement.textContent = Math.max(0, currentScore - 2);
+
+          // Spawn death effect at swiper's location
+          spawnSwiperDeath(swiper);
+
+          // remove swiper after collision
+          const index = swipers.indexOf(swiper);
+          if (index > -1) {
+            swipers.splice(index, 1);
+            swiper.remove();
+          }
+        }
+
+        if (areEntitiesColliding(swiper, player2)) {
+          const currentScore = parseInt(player2ScoreElement.textContent);
+          player2ScoreElement.textContent = Math.max(0, currentScore - 1);
+
+          // Spawn death effect at swiper's location
+          spawnSwiperDeath(swiper);
+
+          // remove swiper after collision
+          const index = swipers.indexOf(swiper);
+          if (index > -1) {
+            swipers.splice(index, 1);
+            swiper.remove();
+          }
+        }
+        handleCollectibleCollection(swiper);
+        handleBoonCollection(swiper);
+        handleWebCollision(swiper);
+        for (let i = spiders.length - 1; i >= 0; i--) {
+          if (areEntitiesColliding(swiper, spiders[i])) {
+            // Spawn death effect at swiper's location
+            spawnSwiperDeath(swiper);
+
+            // remove swiper after collision
+            const index = swipers.indexOf(swiper);
+            if (index > -1) {
+              swipers.splice(index, 1);
+              swiper.remove();
+              break;
+            }
+          }
+        }
+        for (let i = chaosEntities.length - 1; i >= 0; i--) {
+          if (areEntitiesColliding(swiper, chaosEntities[i])) {
+            // Spawn death effect at swiper's location
+            spawnSwiperDeath(swiper);
+
+            // remove swiper after collision
+            const index = swipers.indexOf(swiper);
+            if (index > -1) {
+              swipers.splice(index, 1);
+              swiper.remove();
+              break;
+            }
+          }
+        }
+      }
+
+      // Function to check collision between two Elements
+      function areEntitiesColliding(entity1, entity2) {
+        const rect1 = entity1.getBoundingClientRect();
+        const rect2 = entity2.getBoundingClientRect();
+
+        // Basic rect check - return early if no overlap at all
+        if (
+          rect1.right < rect2.left ||
+          rect1.left > rect2.right ||
+          rect1.bottom < rect2.top ||
+          rect1.top > rect2.bottom
+        ) {
+          return false;
+        }
+
+        // Calculate circle centers and radii for each entity
+        const center1 = {
+          x: rect1.left + rect1.width / 2,
+          y: rect1.top + rect1.height / 2,
+        };
+        const center2 = {
+          x: rect2.left + rect2.width / 2,
+          y: rect2.top + rect2.height / 2,
+        };
+
+        // Use the smaller dimension (width or height) as diameter for circular collision
+        const radius1 = Math.min(rect1.width, rect1.height) / 2;
+        const radius2 = Math.min(rect2.width, rect2.height) / 2;
+
+        // Calculate distance between centers
+        const dx = center2.x - center1.x;
+        const dy = center2.y - center1.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Calculate required overlap based on size difference
+        const radiusDiff = Math.abs(radius1 - radius2);
+        const overlapRequired = radiusDiff / 1.1;
+        const touchingDistance = radius1 + radius2;
+        const requiredDistance = touchingDistance - overlapRequired;
+
+        // Check if circles are overlapping by the required amount
+        return distance < requiredDistance;
+      }
+
+      // Function to handle boon collection
+      function handleBoonCollection(player) {
+        for (let i = boons.length - 1; i >= 0; i--) {
+          if (areEntitiesColliding(player, boons[i])) {
+            // Remove collected boon
+            boons[i].remove();
+            boons.splice(i, 1);
+
+            // Spawn two new herbs
+            spawnCollectible();
+            spawnCollectible();
+
+            if (player.classList.contains("roach")) {
+              spawnSwiper();
+              spawnSwiper();
+              spawnSwiper();
+            }
+            if (player.classList.contains("spider")) {
+              spawnWeb(player);
+              spawnWaker();
+            }
+            break;
+          }
+        }
+      }
+
+      // Function to handle collectible collection
+      function handleCollectibleCollection(player) {
+        for (let i = collectibles.length - 1; i >= 0; i--) {
+          if (areEntitiesColliding(player, collectibles[i])) {
+            // remove collected collectible
+            collectibles[i].remove();
+            collectibles.splice(i, 1);
+
+            if (player.classList.contains("roach")) {
+              spawnSwiper();
+              spawnSwiper();
+              if (collectibles.length < 2) {
+                // Spawn new collectible
+                spawnCollectible();
+              }
+              break;
+            }
+
+            // Update last time a player collected a herb
+            lastHerbCollectionTime = Date.now();
+
+            // Update score
+            const scoreSpan = player.classList.contains("beetle") ? player1ScoreElement : player2ScoreElement;
+            const newScore = parseInt(scoreSpan.textContent) + 1;
+            scoreSpan.textContent = newScore;
+
+            // Check for achievements
+            if (achievementMilestones[newScore]) {
+              const achievementEmoji = achievementMilestones[newScore];
+              const isPlayer1 = player.classList.contains("beetle");
+              const playerAchievements = isPlayer1 ? player1Achievements : player2Achievements;
+
+              // Only spawn if this player hasn't earned this achievement yet
+              if (!playerAchievements.has(newScore)) {
+                playerAchievements.add(newScore);
+                spawnAchievement(player, achievementEmoji);
+                addAchievementToBar(isPlayer1, achievementEmoji);
+              }
+            }
+
+            // Spawn swiper if score reaches 10 or more
+            if (newScore >= 10) {
+              spawnSwiper();
+            }
+
+            // Spawn boon if score is divisible by 5
+            if (newScore % 5 === 0 && newScore > 0) {
+              spawnBoon();
+            }
+
+            if (collectibles.length < 2) {
+              // Spawn new collectible
+              spawnCollectible();
+            }
+            break;
+          }
+        }
+      }
+
+      // Function to update player rotation based on movement direction
+      function updatePlayerRotation(player) {
+        const playerId = player.id;
+        const up = keysPressed.has(`${playerId}-up`);
+        const down = keysPressed.has(`${playerId}-down`);
+        const left = keysPressed.has(`${playerId}-left`);
+        const right = keysPressed.has(`${playerId}-right`);
+
+        if (up && left) {
+          player.style.transform = "rotate3d(0, 0, 1, -45deg)";
+        } else if (up && right) {
+          player.style.transform = "rotate3d(0, 0, 1, 45deg)";
+        } else if (down && left) {
+          player.style.transform = "rotate3d(0, 0, 1, -135deg)";
+        } else if (down && right) {
+          player.style.transform = "rotate3d(0, 0, 1, 135deg)";
+        } else if (up) {
+          player.style.transform = "rotate3d(0, 0, 1, 0deg)";
+        } else if (down) {
+          player.style.transform = "rotate3d(0, 0, 1, 180deg)";
+        } else if (left) {
+          player.style.transform = "rotate3d(0, 0, 1, -90deg)";
+        } else if (right) {
+          player.style.transform = "rotate3d(0, 0, 1, 90deg)";
+        }
+      }
+
+      // Function to move a player with requestAnimationFrame loop
+      function movePlayer(player, direction, step) {
+        const animate = () => {
+          const playerRect = player.getBoundingClientRect();
+          const gameAreaRect = gameArea.getBoundingClientRect();
+          let canMove = false;
+
+          switch (direction) {
+            case "up":
+              if (playerRect.top > gameAreaRect.top) {
+                player.style.bottom = `${parseInt(player.style.bottom) + step}%`;
+                canMove = true;
+              }
+              break;
+            case "left":
+              if (playerRect.left > gameAreaRect.left) {
+                player.style.left = `${parseInt(player.style.left) - step}%`;
+                canMove = true;
+              }
+              break;
+            case "down":
+              if (playerRect.bottom < gameAreaRect.bottom) {
+                player.style.bottom = `${parseInt(player.style.bottom) - step}%`;
+                canMove = true;
+              }
+              break;
+            case "right":
+              if (playerRect.right < gameAreaRect.right) {
+                player.style.left = `${parseInt(player.style.left) + step}%`;
+                canMove = true;
+              }
+              break;
+          }
+
+          // Update last movement time if player actually moved
+          if (canMove) {
+            lastPlayerMovementTime = Date.now();
+          }
+
+          // Update rotation based on all pressed keys
+          updatePlayerRotation(player);
+
+          // Check for collectible collisions
+          handleCollectibleCollection(player);
+
+          // Check for boon collisions
+          handleBoonCollection(player);
+
+          // Check for web collisions
+          handleWebCollision(player);
+
+          // Continue animation if key is still pressed and movement is possible
+          if (canMove && keysPressed.has(`${player.id}-${direction}`)) {
+            requestAnimationFrame(animate);
+          }
+        };
+
+        // Start the animation
+        requestAnimationFrame(animate);
+      }
+
+      // Copy player template into game-area and position it at the bottom center
+      const player1 = player1template.cloneNode(true).children[0];
+      placeGameEntity(player1, "0%", "20%");
+      gameArea.appendChild(player1);
+
+      // Copy player2 template into game-area and position it at the bottom center
+      const player2 = player2template.cloneNode(true).children[0];
+      placeGameEntity(player2, "0%", "70%");
+      gameArea.appendChild(player2);
+
+      gameArea.addEventListener("click", () => {
+        // Toggle between full screen and non-full screen.
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen();
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          }
+        }
+      });
+
+      // Create joysticks
+      const leftJoystick = joysticktemplate.cloneNode(true).children[0];
+      leftJoystick.className = "joystick joystick-left";
+      leftJoystick.querySelector(".joystick-stick").style.color = "#00ff00";
+      leftJoystick.querySelector(".joystick-base use").setAttribute("href", "#joystick-base-left");
+      document.body.insertBefore(leftJoystick, gameArea);
+      let joystick1 = new JoystickController(
+        leftJoystick.querySelector(".joystick-stick-container"),
+        64,
+        8,
+        {
+          up: "w",
+          down: "s",
+          left: "a",
+          right: "d",
+        },
+        leftJoystick,
+      );
+
+      const rightJoystick = joysticktemplate.cloneNode(true).children[0];
+      rightJoystick.className = "joystick joystick-right";
+      rightJoystick.querySelector(".joystick-stick").style.color = "#ff0000";
+      rightJoystick.querySelector(".joystick-base use").setAttribute("href", "#joystick-base-right");
+      document.body.appendChild(rightJoystick);
+      let joystick2 = new JoystickController(
+        rightJoystick.querySelector(".joystick-stick-container"),
+        64,
+        8,
+        {
+          up: "i",
+          down: "k",
+          left: "j",
+          right: "l",
+        },
+        rightJoystick,
+      );
+
+      // Handle orientation change to reset joystick positions
+      function handleOrientationChange() {
+        joystick1.resetPosition();
+        joystick2.resetPosition();
+      }
+
+      // Listen for orientation changes
+      window.addEventListener("orientationchange", handleOrientationChange);
+      // Also listen for resize events as a fallback
+      let resizeTimeout;
+      window.addEventListener("resize", () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          // Check if aspect ratio changed significantly (indicates orientation change)
+          const aspectRatio = window.innerWidth / window.innerHeight;
+          if (!window.lastAspectRatio || Math.abs(aspectRatio - window.lastAspectRatio) > 0.3) {
+            handleOrientationChange();
+            window.lastAspectRatio = aspectRatio;
+          }
+        }, 100);
+      });
+      // Initialize aspect ratio tracking
+      window.lastAspectRatio = window.innerWidth / window.innerHeight;
+
+      // Handle pointer down events outside game area to reposition joysticks
+      function handlePointerDownOutsideGameArea(e) {
+        // Check if the event is from a touch or mouse
+        const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+        const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+        const touchId = e.changedTouches ? e.changedTouches[0].identifier : null;
+
+        // Check if click is outside game area
+        const gameAreaRect = gameArea.getBoundingClientRect();
+        if (
+          clientX >= gameAreaRect.left &&
+          clientX <= gameAreaRect.right &&
+          clientY >= gameAreaRect.top &&
+          clientY <= gameAreaRect.bottom
+        ) {
+          return; // Inside game area, do nothing
+        }
+
+        // Calculate distance to each joystick
+        const joystick1Center = joystick1.getCenterPosition();
+        const joystick2Center = joystick2.getCenterPosition();
+
+        const dist1 = Math.hypot(clientX - joystick1Center.x, clientY - joystick1Center.y);
+        const dist2 = Math.hypot(clientX - joystick2Center.x, clientY - joystick2Center.y);
+
+        // Move the closest joystick to the pointer position
+        const closestJoystick = dist1 <= dist2 ? joystick1 : joystick2;
+        closestJoystick.moveToPosition(clientX, clientY);
+        closestJoystick.startDragFromPosition(clientX, clientY, touchId);
+
+        // Prevent default to avoid conflicts
+        e.preventDefault();
+      }
+
+      document.addEventListener("mousedown", handlePointerDownOutsideGameArea, { passive: false });
+      document.addEventListener("touchstart", handlePointerDownOutsideGameArea, { passive: false });
+
+      // Spawn initial collectibles
+      spawnCollectible();
+      spawnCollectible();
+
+      // Check for spider spawning based on inactivity
+      setInterval(() => {
+        const currentTime = Date.now();
+        const timeSinceLastCollection = currentTime - lastHerbCollectionTime;
+        const timeSinceLastMovement = currentTime - lastPlayerMovementTime;
+        const player1Score = parseInt(player1ScoreElement.textContent);
+        const player2Score = parseInt(player2ScoreElement.textContent);
+
+        // Spawn waker if either player has score > 15 and no herb collected for 10+ seconds
+        if (
+          ((timeSinceLastCollection >= 6000 && Math.round(timeSinceLastCollection / 1000) % 3 === 0) ||
+            (timeSinceLastMovement >= 4000 && Math.round(timeSinceLastMovement / 1000) % 4 === 0)) &&
+          (player1Score > 15 || player2Score > 15)
+        ) {
+          spawnWaker();
+        }
+      }, 1000); // Check every second
+
+      // Attach event listeners for player movement and actions. Use WSAD to move player1 and IJKL to move player2.
+      document.addEventListener("keydown", (event) => {
+        const step = 1; // Reduced step for smoother animation
+        switch (event.key) {
+          // Player 1 controls (WASD)
+          case "w":
+          case "W":
+            if (!keysPressed.has("beetle-up")) {
+              keysPressed.add("beetle-up");
+              movePlayer(player1, "up", step);
+            }
+            break;
+          case "a":
+          case "A":
+            if (!keysPressed.has("beetle-left")) {
+              keysPressed.add("beetle-left");
+              movePlayer(player1, "left", step);
+            }
+            break;
+          case "s":
+          case "S":
+            if (!keysPressed.has("beetle-down")) {
+              keysPressed.add("beetle-down");
+              movePlayer(player1, "down", step);
+            }
+            break;
+          case "d":
+          case "D":
+            if (!keysPressed.has("beetle-right")) {
+              keysPressed.add("beetle-right");
+              movePlayer(player1, "right", step);
+            }
+            break;
+
+          // Player 2 controls (IJKL)
+          case "i":
+          case "I":
+            if (!keysPressed.has("lady-beetle-up")) {
+              keysPressed.add("lady-beetle-up");
+              movePlayer(player2, "up", step);
+            }
+            break;
+          case "j":
+          case "J":
+            if (!keysPressed.has("lady-beetle-left")) {
+              keysPressed.add("lady-beetle-left");
+              movePlayer(player2, "left", step);
+            }
+            break;
+          case "k":
+          case "K":
+            if (!keysPressed.has("lady-beetle-down")) {
+              keysPressed.add("lady-beetle-down");
+              movePlayer(player2, "down", step);
+            }
+            break;
+          case "l":
+          case "L":
+            if (!keysPressed.has("lady-beetle-right")) {
+              keysPressed.add("lady-beetle-right");
+              movePlayer(player2, "right", step);
+            }
+            break;
+        }
+      });
+
+      // Stop movement when keys are released
+      document.addEventListener("keyup", (event) => {
+        switch (event.key) {
+          // Player 1 controls (WASD)
+          case "w":
+          case "W":
+            keysPressed.delete("beetle-up");
+            break;
+          case "a":
+          case "A":
+            keysPressed.delete("beetle-left");
+            break;
+          case "s":
+          case "S":
+            keysPressed.delete("beetle-down");
+            break;
+          case "d":
+          case "D":
+            keysPressed.delete("beetle-right");
+            break;
+
+          // Player 2 controls (IJKL)
+          case "i":
+          case "I":
+            keysPressed.delete("lady-beetle-up");
+            break;
+          case "j":
+          case "J":
+            keysPressed.delete("lady-beetle-left");
+            break;
+          case "k":
+          case "K":
+            keysPressed.delete("lady-beetle-down");
+            break;
+          case "l":
+          case "L":
+            keysPressed.delete("lady-beetle-right");
+            break;
+        }
+      });
+
+      // Function to spawn a spider from a random edge (analogous to spawnSwiper)
+      function spawnWaker() {
+        const entity = wakerTemplate.cloneNode(true).children[0];
+        const edge = edges[Math.floor(Math.random() * edges.length)];
+
+        let startX, startY, targetX, targetY;
+
+        switch (edge) {
+          case "top":
+            entity.style.transform = "rotate3d(0, 0, 1, 180deg)"; // Face downwards
+            startX = Math.random() * 92 + 4; // Clamped between 4% and 96%
+            startY = 110; // Start above screen
+            targetX = startX;
+            targetY = -20; // End below screen
+            break;
+          case "bottom":
+            entity.style.transform = "rotate3d(0, 0, 1, 0deg)"; // Face upwards
+            startX = Math.random() * 92 + 4; // Clamped between 4% and 96%
+            startY = -20; // Start below screen
+            targetX = startX;
+            targetY = 110; // End above screen
+            break;
+          case "left":
+            entity.style.transform = "rotate3d(0, 0, 1, 90deg)"; // Face right
+            startX = -20; // Start left of screen
+            startY = Math.random() * 92 + 4; // Clamped between 4% and 96%
+            targetX = 120; // End right of screen
+            targetY = startY;
+            break;
+          case "right":
+            entity.style.transform = "rotate3d(0, 0, 1, -90deg)"; // Face left
+            startX = 120; // Start right of screen
+            startY = Math.random() * 92 + 4; // Clamped between 4% and 96%
+            targetX = -20; // End left of screen
+            targetY = startY;
+            break;
+        }
+
+        entity.style.left = startX + "%";
+        entity.style.bottom = startY + "%";
+        gameArea.appendChild(entity);
+        spiders.push(entity);
+
+        // Animate spider movement for 6 seconds
+        moveWaker(entity, startX, startY, targetX, targetY);
+
+        return entity;
+      }
+
+      // Function to move spider across screen in 6 seconds
+      function moveWaker(spider, startX, startY, targetX, targetY) {
+        const duration = 6000; // 6 seconds
+        const startTime = Date.now();
+        let currentWebs = 0;
+        const maxWebs = 2;
+
+        // Web spawning interval (twice per second = 500ms)
+        const webSpawnInterval = setInterval(() => {
+          if (currentWebs >= maxWebs) {
+            clearInterval(webSpawnInterval);
+            return;
+          }
+
+          if (Math.random() >= 0.5) {
+            return;
+          }
+
+          // Check if spider's center is within game area
+          const spiderRect = spider.getBoundingClientRect();
+          const gameAreaRect = gameArea.getBoundingClientRect();
+          const spiderCenterX = spiderRect.left + spiderRect.width / 2;
+          const spiderCenterY = spiderRect.top + spiderRect.height / 2;
+
+          if (
+            spiderCenterX < gameAreaRect.left ||
+            spiderCenterX > gameAreaRect.right ||
+            spiderCenterY < gameAreaRect.top ||
+            spiderCenterY > gameAreaRect.bottom
+          ) {
+            return; // Skip web spawning if spider center is outside game area
+          }
+
+          spawnWeb(spider);
+          currentWebs++;
+        }, 500);
+
+        const animate = () => {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+
+          const currentX = startX + (targetX - startX) * progress;
+          const currentY = startY + (targetY - startY) * progress;
+
+          spider.style.left = currentX + "%";
+          spider.style.bottom = currentY + "%";
+
+          // Check for player collisions
+          handleWakerCollision(spider);
+          handleBoonCollection(spider);
+
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+          } else {
+            // Clear web spawning interval and remove spider
+            clearInterval(webSpawnInterval);
+            const index = spiders.indexOf(spider);
+            if (index > -1) {
+              spiders.splice(index, 1);
+              spider.remove();
+            }
+          }
+        };
+
+        requestAnimationFrame(animate);
+      }
+
+      // Function to spawn a web at spider's current location
+      function spawnWeb(spider) {
+        const web = traceTemplate.cloneNode(true).children[0];
+        const spiderRect = spider.getBoundingClientRect();
+        const gameAreaRect = gameArea.getBoundingClientRect();
+
+        // Calculate spider's center position as percentage
+        const spiderCenterX = spiderRect.left + spiderRect.width / 2;
+        const spiderCenterY = spiderRect.top + spiderRect.height / 2;
+
+        // Convert to game area relative coordinates
+        const leftPercent = ((spiderCenterX - gameAreaRect.left) / gameAreaRect.width) * 100;
+        const topPercent = ((spiderCenterY - gameAreaRect.top) / gameAreaRect.height) * 100;
+        const bottomPercent = 100 - topPercent;
+
+        // Adjust for web size to center it properly (web is larger than spider)
+        const webSizeAdjustment = 5; // Approximate adjustment for centering
+
+        web.style.left = leftPercent - webSizeAdjustment + "%";
+        web.style.bottom = bottomPercent - webSizeAdjustment + "%";
+        gameArea.appendChild(web);
+        webs.push(web);
+        if (areEntitiesColliding(player1, web)) {
+          handleWebCollision(player1);
+        }
+        if (areEntitiesColliding(player2, web)) {
+          handleWebCollision(player2);
+        }
+      }
+
+      // Function to handle spider collision with players
+      function handleWakerCollision(spider) {
+        if (areEntitiesColliding(spider, player1)) {
+          const currentScore = parseInt(player1ScoreElement.textContent);
+          player1ScoreElement.textContent = Math.max(0, currentScore - 3);
+
+          // Remove spider after collision
+          const index = spiders.indexOf(spider);
+          if (index > -1) {
+            spiders.splice(index, 1);
+            spider.remove();
+          }
+        }
+
+        if (areEntitiesColliding(spider, player2)) {
+          const currentScore = parseInt(player2ScoreElement.textContent);
+          player2ScoreElement.textContent = Math.max(0, currentScore - 3);
+
+          // Remove spider after collision
+          const index = spiders.indexOf(spider);
+          if (index > -1) {
+            spiders.splice(index, 1);
+            spider.remove();
+          }
+        }
+      }
+
+      // Function to handle web collision with players
+      function handleWebCollision(player) {
+        for (let i = webs.length - 1; i >= 0; i--) {
+          if (areEntitiesColliding(player, webs[i])) {
+            // Remove web after collision
+            webs[i].remove();
+            webs.splice(i, 1);
+
+            if (player.classList.contains("roach")) {
+              swipers.splice(swipers.indexOf(player), 1);
+              player.remove();
+              break;
+            }
+            const scoreSpan = player.classList.contains("beetle") ? player1ScoreElement : player2ScoreElement;
+            const currentScore = parseInt(scoreSpan.textContent);
+            scoreSpan.textContent = Math.max(0, currentScore - 2);
+
+            break;
+          }
+        }
+      }
+
+      // Function to spawn death effect at swiper's coordinates
+      function spawnSwiperDeath(swiper) {
+        const deathEffect = swiperDeathTemplate.cloneNode(true).children[0];
+
+        // Copy swiper's position
+        deathEffect.style.left = swiper.style.left;
+        deathEffect.style.bottom = swiper.style.bottom;
+
+        gameArea.appendChild(deathEffect);
+
+        // Remove after 100ms
+        setTimeout(() => {
+          deathEffect.remove();
+        }, 100);
+      }
+
+      // Function to spawn achievement effect at player's coordinates
+      function spawnAchievement(player, achievementType) {
+        const achievement = document.createElement("div");
+        achievement.className = "achievements";
+        achievement.textContent = achievementType;
+
+        // Position achievement at player's location
+        const playerRect = player.getBoundingClientRect();
+
+        // Calculate position relative to viewport
+        achievement.style.left = playerRect.left + "px";
+        achievement.style.top = playerRect.top + "px";
+
+        document.body.appendChild(achievement);
+
+        // Remove after 2 seconds
+        setTimeout(() => {
+          achievement.remove();
+        }, 2000);
+      }
+
+      // Function to add achievement emoji to the achievement bar
+      function addAchievementToBar(isPlayer1, achievementEmoji) {
+        const achievementBar = isPlayer1 ? player1AchievementBar : player2AchievementBar;
+        achievementBar.innerHTML += `<span>${achievementEmoji}</span>`;
+      }
+
+      // Function to spawn a chaos entity from random corner
+      function spawnChaos() {
+        const entity = chaosTemplate.cloneNode(true).children[0];
+        const corners = [
+          { x: 0, y: 0, targetX: 100, targetY: 100 }, // bottom-left to top-right
+          { x: 100, y: 0, targetX: 0, targetY: 100 }, // bottom-right to top-left
+          { x: 0, y: 100, targetX: 100, targetY: 0 }, // top-left to bottom-right
+          { x: 100, y: 100, targetX: 0, targetY: 0 }, // top-right to bottom-left
+        ];
+
+        const corner = corners[Math.floor(Math.random() * corners.length)];
+
+        entity.style.left = corner.x + "%";
+        entity.style.bottom = corner.y + "%";
+        gameArea.appendChild(entity);
+        chaosEntities.push(entity);
+
+        // Animate chaos movement
+        moveChaos(entity, corner.x, corner.y, corner.targetX, corner.targetY);
+
+        return entity;
+      }
+
+      // Function to update chaos entity rotation based on movement direction
+      function updateChaosRotation(chaos, direction) {
+        const { x, y } = direction;
+
+        if (y > 0 && x < 0) {
+          chaos.style.transform = "rotate3d(0, 0, 1, -45deg)"; // up-left
+        } else if (y > 0 && x > 0) {
+          chaos.style.transform = "rotate3d(0, 0, 1, 45deg)"; // up-right
+        } else if (y < 0 && x < 0) {
+          chaos.style.transform = "rotate3d(0, 0, 1, -135deg)"; // down-left
+        } else if (y < 0 && x > 0) {
+          chaos.style.transform = "rotate3d(0, 0, 1, 135deg)"; // down-right
+        } else if (y > 0) {
+          chaos.style.transform = "rotate3d(0, 0, 1, 0deg)"; // up
+        } else if (y < 0) {
+          chaos.style.transform = "rotate3d(0, 0, 1, 180deg)"; // down
+        } else if (x < 0) {
+          chaos.style.transform = "rotate3d(0, 0, 1, -90deg)"; // left
+        } else if (x > 0) {
+          chaos.style.transform = "rotate3d(0, 0, 1, 90deg)"; // right
+        }
+      }
+
+      // Function to move chaos entity with random direction changes
+      function moveChaos(chaos, startX, startY, initialTargetX, initialTargetY) {
+        const duration = 6000; // 6 seconds total
+        const startTime = Date.now();
+        let directionChanges = 0;
+        const maxDirectionChanges = 10;
+
+        // Current position and direction tracking
+        let currentX = startX;
+        let currentY = startY;
+        let currentDirection = {
+          x: (initialTargetX - startX) / Math.abs(initialTargetX - startX || 1),
+          y: (initialTargetY - startY) / Math.abs(initialTargetY - startY || 1),
+        };
+
+        // Set initial rotation
+        updateChaosRotation(chaos, currentDirection);
+
+        // Direction change interval
+        const directionChangeInterval = setInterval(() => {
+          if (directionChanges >= maxDirectionChanges) {
+            clearInterval(directionChangeInterval);
+            return;
+          }
+
+          // 8 possible directions: 4 cardinal + 4 diagonal
+          const directions = [
+            { x: 0, y: 1 }, // up
+            { x: 1, y: 1 }, // up-right
+            { x: 1, y: 0 }, // right
+            { x: 1, y: -1 }, // down-right
+            { x: 0, y: -1 }, // down
+            { x: -1, y: -1 }, // down-left
+            { x: -1, y: 0 }, // left
+            { x: -1, y: 1 }, // up-left
+          ];
+
+          const direction = directions[Math.floor(Math.random() * directions.length)];
+          currentDirection = direction;
+
+          // Update rotation when direction changes
+          updateChaosRotation(chaos, currentDirection);
+
+          directionChanges++;
+        }, 1500);
+
+        const animate = () => {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+
+          // Calculate movement speed (same total distance over 6 seconds)
+          const speed = 141.42 / duration; // pixels per millisecond
+          const deltaTime = 16; // approximately 60fps
+
+          // Move in current direction
+          const moveDistance = speed * deltaTime;
+          currentX += currentDirection.x * moveDistance;
+          currentY += currentDirection.y * moveDistance;
+
+          chaos.style.left = currentX + "%";
+          chaos.style.bottom = currentY + "%";
+
+          // Check for collisions
+          handleChaosCollision(chaos);
+
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+          } else {
+            // Clear direction change interval and check for removal
+            clearInterval(directionChangeInterval);
+
+            // Check if entity is off screen
+            const chaosRect = chaos.getBoundingClientRect();
+            const gameAreaRect = gameArea.getBoundingClientRect();
+
+            if (
+              chaosRect.right < gameAreaRect.left ||
+              chaosRect.left > gameAreaRect.right ||
+              chaosRect.bottom < gameAreaRect.top ||
+              chaosRect.top > gameAreaRect.bottom
+            ) {
+              // Remove chaos entity
+              const index = chaosEntities.indexOf(chaos);
+              if (index > -1) {
+                chaosEntities.splice(index, 1);
+                chaos.remove();
+              }
+              return;
+            }
+            requestAnimationFrame(animate);
+          }
+        };
+
+        requestAnimationFrame(animate);
+      }
+
+      // Function to handle chaos collision with other entities
+      function handleChaosCollision(chaos) {
+        // Check collision with players
+        if (areEntitiesColliding(chaos, player1)) {
+          spawnSwiperDeath(chaos);
+          // Remove chaos entity
+          const index = chaosEntities.indexOf(chaos);
+          if (index > -1) {
+            chaosEntities.splice(index, 1);
+            chaos.remove();
+          }
+          const currentScore = parseInt(player1ScoreElement.textContent);
+          player1ScoreElement.textContent = Math.max(0, currentScore - 1);
+        }
+
+        if (areEntitiesColliding(chaos, player2)) {
+          spawnSwiperDeath(chaos);
+          // Remove chaos entity
+          const index = chaosEntities.indexOf(chaos);
+          if (index > -1) {
+            chaosEntities.splice(index, 1);
+            chaos.remove();
+          }
+          const currentScore = parseInt(player2ScoreElement.textContent);
+          player2ScoreElement.textContent = Math.max(0, currentScore - 1);
+        }
+
+        // Check collision with webs
+        for (let i = webs.length - 1; i >= 0; i--) {
+          if (areEntitiesColliding(chaos, webs[i])) {
+            spawnSwiperDeath(chaos);
+            // Remove chaos entity
+            const index = chaosEntities.indexOf(chaos);
+            if (index > -1) {
+              chaosEntities.splice(index, 1);
+              chaos.remove();
+            }
+            // Remove web after collision
+            webs[i].remove();
+            webs.splice(i, 1);
+            break;
+          }
+        }
+        // Check collision with spiders
+        for (let i = spiders.length - 1; i >= 0; i--) {
+          if (areEntitiesColliding(chaos, spiders[i])) {
+            spawnSwiperDeath(chaos);
+            // Remove chaos entity
+            const index = chaosEntities.indexOf(chaos);
+            if (index > -1) {
+              chaosEntities.splice(index, 1);
+              chaos.remove();
+            }
+            break;
+          }
+        }
+      }
+    </script>
+  </body>
+</html>
